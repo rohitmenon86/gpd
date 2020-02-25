@@ -1,5 +1,14 @@
 #include "../../../gpd/include/nodes/grasp_detection_node.h"
+#include <tf2_ros/transform_listener.h>
 
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include<tf2/buffer_core.h>
+#include<tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include<tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 
 /** constants for input point cloud types */
 const int GraspDetectionNode::POINT_CLOUD_2 = 0; ///< sensor_msgs/PointCloud2
@@ -69,39 +78,64 @@ GraspDetectionNode::GraspDetectionNode(ros::NodeHandle& node) : has_cloud_(false
   grasps_pub_ = node.advertise<gpd::GraspConfigList>("clustered_grasps", 10);
 
   rviz_plotter_ = new GraspPlotter(node, grasp_detector_->getHandSearchParameters());
-
+  
+  cloud_pub_ = node.advertise<sensor_msgs::PointCloud2>("point_cloud_world", 10);
+  
+  std::string trigger_topic = "gpd_trigger";
+  trigger_sub_ = node.subscribe(trigger_topic, 1, &GraspDetectionNode::trigger_callback, this);
+  
+  trigger_ = -1;
+  workspace_reinitialised_ = false;
   node.getParam("workspace", workspace_);
 }
 
 
 void GraspDetectionNode::run()
 {
-  ros::Rate rate(100);
-  ROS_INFO("Waiting for point cloud to arrive ...");
+ 
+    ros::Rate rate(25);
+    ROS_INFO("Waiting for point cloud to arrive ...");
 
-  while (ros::ok())
-  {
-    if (has_cloud_)
+    while (ros::ok() )
     {
-      // Detect grasps in point cloud.
-      std::vector<Grasp> grasps = detectGraspPosesInTopic();
+        ROS_INFO("Waiting for trigger ...");
+        while(trigger_ != 1)
+        {
+            if(workspace_reinitialised_) 
+            {
+                workspace_reinitialised_ = false;
+            }
+            ros::spinOnce();
+            rate.sleep();
+        }
+        
+        if(!workspace_reinitialised_)
+        {
+            ros::param::get("/detect_grasps/workspace", workspace_);
+            workspace_reinitialised_ = true;
+        }
+        if (has_cloud_)
+        {
+        // Detect grasps in point cloud.
+        std::vector<Grasp> grasps = detectGraspPosesInTopic();
 
-      // Visualize the detected grasps in rviz.
-      if (use_rviz_)
-      {
-        rviz_plotter_->drawGrasps(grasps, frame_);
-      }
+        // Visualize the detected grasps in rviz.
+        if (use_rviz_)
+        {
+            rviz_plotter_->drawGrasps(grasps, frame_);
+        }
 
-      // Reset the system.
-      has_cloud_ = false;
-      has_samples_ = false;
-      has_normals_ = false;
-      ROS_INFO("Waiting for point cloud to arrive ...");
+        // Reset the system.
+        has_cloud_ = false;
+        has_samples_ = false;
+        has_normals_ = false;
+        ROS_INFO("Waiting for point cloud to arrive ...");
+        }
+
+        ros::spinOnce();
+        rate.sleep();
     }
-
-    ros::spinOnce();
-    rate.sleep();
-  }
+    
 }
 
 
@@ -148,9 +182,29 @@ std::vector<int> GraspDetectionNode::getSamplesInBall(const PointCloudRGBA::Ptr&
 
 
 void GraspDetectionNode::cloud_callback(const sensor_msgs::PointCloud2& msg)
-{
+{  
   if (!has_cloud_)
   {
+    /*tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
+    geometry_msgs::TransformStamped source2target;
+    ros::Duration timeout(1.0);
+    sensor_msgs::PointCloud2 msg_transformed;
+    try
+    {
+        source2target = tfBuffer.lookupTransform("world", msg.header.frame_id, ros::Time(0), timeout);
+        ROS_INFO_STREAM("source2target: "<<source2target<<"\n");
+        msg_transformed.header.frame_id = "world";
+        msg_transformed.header.stamp = ros::Time::now();
+        tf2::doTransform(msg,  msg_transformed, source2target);   
+    }
+    catch(tf2::TransformException& ex)
+    {
+        ROS_WARN("%s", ex.what());
+        return;
+    }
+    
+    cloud_pub_.publish(msg_transformed);*/
     delete cloud_camera_;
     cloud_camera_ = NULL;
 
@@ -304,6 +358,12 @@ gpd::GraspConfigList GraspDetectionNode::createGraspListMsg(const std::vector<Gr
   msg.header = cloud_camera_header_;
 
   return msg;
+}
+
+void GraspDetectionNode::trigger_callback(const std_msgs::Int32& msg)
+{
+    ROS_INFO("Trigger Received ...");
+    trigger_ = msg.data;
 }
 
 

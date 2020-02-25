@@ -5,7 +5,14 @@ project(gpd)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS cmake_modules eigen_conversions geometry_msgs message_generation roscpp
-  sensor_msgs std_msgs)
+  sensor_msgs std_msgs tf2_ros tf2_eigen tf_conversions
+    tf2_geometry_msgs
+    tf2
+    tf2_kdl
+    tf2_msgs
+    tf2_py
+    tf2_sensor_msgs
+    tf2_tools)
 
 # PCL
 find_package(PCL REQUIRED)

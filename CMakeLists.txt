@@ -62,7 +62,7 @@ add_message_files(FILES CloudIndexed.msg CloudSamples.msg CloudSources.msg Grasp
   SamplesMsg.msg)
 
 ## Generate services in the 'srv' folder
-add_service_files(FILES detect_grasps.srv)
+add_service_files(FILES detect_grasps.srv detect_grasps_cloud.srv)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -128,6 +128,8 @@ add_library(${PROJECT_NAME}_grasp_image_15_channels src/${PROJECT_NAME}/grasp_im
 add_library(${PROJECT_NAME}_dense_layer src/${PROJECT_NAME}/dense_layer.cpp)
 add_library(${PROJECT_NAME}_conv_layer src/${PROJECT_NAME}/conv_layer.cpp)
 add_library(${PROJECT_NAME}_lenet src/${PROJECT_NAME}/lenet.cpp)
+add_library(${PROJECT_NAME}_grasp_detector_ros src/nodes/grasp_detection_cloud_server.cpp)
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -145,6 +147,7 @@ add_executable(${PROJECT_NAME}_test_grasp_image src/tests/test_grasp_image.cpp)
 add_executable(${PROJECT_NAME}_test_conv_layer src/tests/test_conv_layer.cpp)
 add_executable(${PROJECT_NAME}_test_lenet src/tests/test_lenet.cpp)
 add_executable(${PROJECT_NAME}_test_service src/tests/test_service.cpp)
+add_executable(${PROJECT_NAME}_detect_grasps_cloud_server src/nodes/grasp_detection_cloud_server.cpp)
 
 
 ## Add cmake target dependencies of the executable
@@ -206,6 +209,18 @@ target_link_libraries(${PROJECT_NAME}_detect_grasps_server
                       ${PROJECT_NAME}_grasp_plotter
                       ${GENERATOR_LIB}
                       ${PCL_LIBRARIES})
+                      
+target_link_libraries(${PROJECT_NAME}_detect_grasps_cloud_server
+                      ${PROJECT_NAME}_grasp_detector
+                      ${PROJECT_NAME}_grasp_plotter
+                      ${GENERATOR_LIB}
+                      ${PCL_LIBRARIES})  
+                      
+target_link_libraries(${PROJECT_NAME}_grasp_detector_ros
+                      ${PROJECT_NAME}_grasp_detector
+                      ${PROJECT_NAME}_grasp_plotter
+                      ${GENERATOR_LIB}
+                      ${PCL_LIBRARIES})                       
 
 target_link_libraries(${PROJECT_NAME}_sequential_importance_sampling
                       ${PROJECT_NAME}_grasp_detector)
@@ -250,6 +265,10 @@ set_target_properties(${PROJECT_NAME}_detect_grasps
 set_target_properties(${PROJECT_NAME}_detect_grasps_server
                       PROPERTIES OUTPUT_NAME detect_grasps_server
                       PREFIX "")
+                      
+set_target_properties(${PROJECT_NAME}_detect_grasps_cloud_server
+                      PROPERTIES OUTPUT_NAME detect_grasps_cloud_server
+                      PREFIX "")                      
 
 set_target_properties(${PROJECT_NAME}_classify_candidates
                       PROPERTIES OUTPUT_NAME classify_candidates

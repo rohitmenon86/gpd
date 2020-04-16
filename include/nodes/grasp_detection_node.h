@@ -43,6 +43,8 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <std_msgs/Int32.h>
+
 
 // PCL
 #include <pcl/common/common.h>
@@ -156,7 +158,12 @@ private:
    * \param hands the list of grasps
    * \return the ROS message that contains the grasp poses
   */
+  
+ 
   gpd::GraspConfigList createGraspListMsg(const std::vector<Grasp>& hands);
+  
+  void trigger_callback(const std_msgs::Int32& msg);
+
 
   gpd::GraspConfig convertToGraspMsg(const Grasp& hand);
 
@@ -174,6 +181,8 @@ private:
   ros::Subscriber samples_sub_; ///< ROS subscriber for samples messages
   ros::Publisher grasps_pub_; ///< ROS publisher for grasp list messages
   ros::Publisher grasps_rviz_pub_; ///< ROS publisher for grasps in rviz (visualization)
+  ros::Publisher cloud_pub_; ///< ROS publisher for grasps in rviz (visualization)
+  ros::Subscriber trigger_sub_;
 
   bool use_importance_sampling_; ///< if importance sampling is used
   bool use_rviz_; ///< if rviz is used for visualization instead of PCL
@@ -187,6 +196,9 @@ private:
   static const int POINT_CLOUD_2; ///< sensor_msgs/PointCloud2
   static const int CLOUD_INDEXED; ///< gpd/CloudIndexed
   static const int CLOUD_SAMPLES; ///< gpd/CloudSamples
+  
+  int trigger_;
+  bool workspace_reinitialised_;
 };
 
 #endif /* GRASP_DETECTION_NODE_H_ */

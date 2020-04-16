@@ -112,6 +112,7 @@ generate_messages(DEPENDENCIES geometry_msgs sensor_msgs std_msgs)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 INCLUDE_DIRS include
+LIBRARIES ${PROJECT_NAME}_grasp_detector_ros
 CATKIN_DEPENDS cmake_modules eigen_conversions geometry_msgs message_runtime roscpp sensor_msgs std_msgs
 DEPENDS Eigen OpenCV PCL
 )
@@ -135,7 +136,7 @@ add_library(${PROJECT_NAME}_grasp_image_15_channels src/${PROJECT_NAME}/grasp_im
 add_library(${PROJECT_NAME}_dense_layer src/${PROJECT_NAME}/dense_layer.cpp)
 add_library(${PROJECT_NAME}_conv_layer src/${PROJECT_NAME}/conv_layer.cpp)
 add_library(${PROJECT_NAME}_lenet src/${PROJECT_NAME}/lenet.cpp)
-add_library(${PROJECT_NAME}_grasp_detector_ros src/nodes/grasp_detection_cloud_server.cpp)
+add_library(${PROJECT_NAME}_grasp_detector_ros src/${PROJECT_NAME}/grasp_detector_ros.cpp)
 
 
 ## Add cmake target dependencies of the library

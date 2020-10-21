@@ -125,16 +125,36 @@ GraspDetector::GraspDetector(const std::string &config_filename) {
   // Read grasp image parameters.
   std::string image_geometry_filename =
       config_file.getValueOfKeyAsString("image_geometry_filename", "");
-  if (image_geometry_filename == "0") {
-    image_geometry_filename = config_filename;
+  
+  if(checkFileExists(image_geometry_filename))
+  {
+    descriptor::ImageGeometry image_geom(image_geometry_filename);
+    std::cout << image_geom;
+  } else
+  {
+    printf("ERROR: path 'image_geometry_filename' does not exist!");
+    throw runtime_error("ERROR: file in 'image_geometry_filename' does not exist! Check the config file");
   }
-  descriptor::ImageGeometry image_geom(image_geometry_filename);
-  std::cout << image_geom;
+
+  
 
   // Read classification parameters and create classifier.
   std::string model_file = config_file.getValueOfKeyAsString("model_file", "");
   std::string weights_file =
       config_file.getValueOfKeyAsString("weights_file", "");
+  
+  if(!checkFileExists(model_file))
+  {
+    printf("ERROR: path 'model_file' does not exist!");
+    throw runtime_error("ERROR: file in 'model_file' does not exist! Check the config file");
+  }
+
+  if(!checkFileExists(weights_file))
+  {
+    printf("ERROR: path 'weights_file' does not exist!");
+    throw runtime_error("ERROR: file in 'weights_file' does not exist! Check the config file");
+  }
+
   if (!model_file.empty() || !weights_file.empty()) {
     int device = config_file.getValueOfKey<int>("device", 0);
     int batch_size = config_file.getValueOfKey<int>("batch_size", 1);
@@ -805,6 +825,17 @@ void GraspDetector::printStdVector(const std::vector<double> &v,
     printf("%3.2f ", v[i]);
   }
   printf("\n");
+}
+
+bool GraspDetector::checkFileExists(const std::string &file_name) {
+  std::ifstream file;
+  file.open(file_name.c_str());
+  if (!file) {
+    std::cout << "File " + file_name + " could not be found!\n";
+    return false;
+  }
+  file.close();
+  return true;
 }
 
 }  // namespace gpd

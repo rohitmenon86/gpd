@@ -233,6 +233,15 @@ class GraspDetector {
   const descriptor::ImageGeometry &getImageGeometry() const {
     return image_generator_->getImageGeometry();
   }
+  
+  /**
+   * @brief Check file existence
+   * 
+   * @param file_name absolute path to file
+   * @return true if file exists
+   * @return false if it doesn't
+   */
+  bool checkFileExists(const std::string &file_name);
 
  private:
   void printStdVector(const std::vector<int> &v, const std::string &name) const;

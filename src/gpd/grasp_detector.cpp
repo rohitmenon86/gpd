@@ -129,14 +129,14 @@ GraspDetector::GraspDetector(const std::string &config_filename) {
   if (image_geometry_filename == "0") {
     image_geometry_filename = config_filename;
   }
-  
+  descriptor::ImageGeometry* image_geom;
   if(checkFileExists(image_geometry_filename))
   {
-    descriptor::ImageGeometry image_geom(image_geometry_filename);
-    std::cout << image_geom;
+    image_geom = new descriptor::ImageGeometry(image_geometry_filename);
+    std::cout << *image_geom;
   } else
   {
-    throw runtime_error("ERROR: file %s does not exist! Check the config file", image_geometry_filename);
+    throw std::runtime_error(("ERROR: file %s does not exist! Check the config file", image_geometry_filename).c_str());
   }
 
   // Read classification parameters and create classifier.
@@ -145,10 +145,10 @@ GraspDetector::GraspDetector(const std::string &config_filename) {
       config_file.getValueOfKeyAsString("weights_file", "");
   
   if(!checkFileExists(model_file))
-    throw runtime_error("ERROR: file %s does not exist! Check the config file", model_file);
+    throw std::runtime_error(("ERROR: file %s does not exist! Check the config file", model_file).c_str());
 
   if(!checkFileExists(weights_file))
-    throw runtime_error("ERROR: file %s does not exist! Check the config file", weights_file);
+    throw std::runtime_error(("ERROR: file %s does not exist! Check the config file", weights_file).c_str());
 
 
   if (!model_file.empty() || !weights_file.empty()) {
@@ -172,7 +172,7 @@ GraspDetector::GraspDetector(const std::string &config_filename) {
   // Create object to create grasp images from grasp candidates (used for
   // classification).
   image_generator_ = std::make_unique<descriptor::ImageGenerator>(
-      image_geom, hand_search_params.num_threads_,
+      *image_geom, hand_search_params.num_threads_,
       hand_search_params.num_orientations_, false, remove_plane);
 
   // Read grasp filtering parameters based on robot workspace and gripper width.

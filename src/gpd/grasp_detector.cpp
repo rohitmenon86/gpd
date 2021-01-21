@@ -145,7 +145,9 @@ GraspDetector::GraspDetector(const std::string &config_filename) {
       config_file.getValueOfKeyAsString("weights_file", "");
   
   if(!checkFileExists(model_file))
-    throw std::runtime_error(("ERROR: file %s does not exist! Check the config file", model_file).c_str());
+  {
+    printf("ERROR: file %s does not exist! Check the config file\n", model_file.c_str());
+  }
 
   if(!checkFileExists(weights_file))
     throw std::runtime_error(("ERROR: file %s does not exist! Check the config file", weights_file).c_str());

@@ -57,6 +57,7 @@
 #endif
 
 #include <gpd/util/eigen_utils.h>
+#include <gpd/util/system_print_color.h>
 
 namespace gpd {
 namespace util {

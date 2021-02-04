@@ -264,6 +264,8 @@ void Cloud::filterWorkspace(const std::vector<double> &workspace) {
   }
   cloud_processed_ = cloud;
   camera_source_ = camera_source;
+
+  printf("Cloud within workspace: %zu\n", cloud_processed_->size());
 }
 
 void Cloud::filterWorkspace(const std::vector<double> &workspace, const Eigen::Affine3d& transform_camera2base) {
@@ -341,6 +343,8 @@ void Cloud::filterWorkspace(const std::vector<double> &workspace, const Eigen::A
   }
   cloud_processed_ = cloud;
   camera_source_ = camera_source;
+
+  printf("Cloud within workspace: %zu\n", cloud_processed_->size());
 }
 
 void Cloud::filterSamples(const std::vector<double> &workspace) {
@@ -361,6 +365,12 @@ void Cloud::filterSamples(const std::vector<double> &workspace) {
 }
 
 void Cloud::voxelizeCloud(float cell_size) {
+  // Save pre-voxelization values
+  PointCloudRGB::Ptr cloud_unvoxelized(new PointCloudRGB);
+  pcl::copyPointCloud(*cloud_processed_, *cloud_unvoxelized);
+  Eigen::Matrix3Xd normals_unvoxelized = normals_;
+  Eigen::MatrixXi camera_source_unvoxelized = camera_source_;
+
   // Find the cell that each point falls into.
   pcl::PointXYZRGBA min_pt_pcl;
   pcl::PointXYZRGBA max_pt_pcl;
@@ -409,6 +419,16 @@ void Cloud::voxelizeCloud(float cell_size) {
     i++;
   }
 
+  // If no voxels generated, use unvoxelized cloud
+  if (voxels.cols() == 0)
+  {
+    printf(B_MOD_YELLOW("No voxels, using UN-voxelized cloud."));
+    cloud_processed_.reset(new PointCloudRGB);
+    pcl::copyPointCloud(*cloud_unvoxelized, *cloud_processed_);
+    normals_ = normals_unvoxelized;
+    camera_source_ = camera_source_unvoxelized;
+  } else
+  {
   // Copy the voxels into the point cloud.
   cloud_processed_->points.resize(voxels.cols());
   for (int i = 0; i < voxels.cols(); i++) {
@@ -422,6 +442,8 @@ void Cloud::voxelizeCloud(float cell_size) {
   }
 
   printf("Voxelized cloud: %zu\n", cloud_processed_->size());
+}
+
 }
 
 void Cloud::subsample(int num_samples) {
